@@ -17,7 +17,7 @@ export default function Component() {
     {
       title: "Airdrop",
       subheading: "Distribute SOL to multiple wallets in one go",
-      href: "/trade",
+      href: "/AirDrop",
       gridArea: "1 / 2 / 2 / 3",
       icon: "💸",
     },
