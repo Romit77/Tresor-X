@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 SolanaWeb3 Toolkit | Next.js + Solana
 
-## Getting Started
+A modern, user-friendly toolkit for Solana blockchain interactions built with Next.js 14. Seamlessly create tokens, manage airdrops, transfer SOL, and more - all with a beautiful dark-themed UI.
 
-First, run the development server:
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![Solana](https://img.shields.io/badge/Solana-Web3-purple)
+
+## ✨ Features
+
+- 🏗️ **Token Launchpad**: Create and deploy custom tokens without coding
+- 💸 **Bulk Airdrop**: Efficiently distribute SOL to multiple wallets
+- 💱 **Transfer System**: Seamless SOL transfers across the network
+- 💰 **Balance Checker**: Real-time SOL balance monitoring
+- 📝 **Message Signing**: Secure wallet signature verification
+- 🎨 **NFT Creation**: Mint unique digital assets (Coming Soon)
+
+## 🛠️ Tech Stack
+
+- Next.js 14
+- Solana Web3.js
+- TypeScript 
+- Tailwind CSS
+- Framer Motion
+- Lucide Icons
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm/yarn
+- Solana CLI (optional)
+- A Solana wallet (Phantom recommended)
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/solana-web3-toolkit.git
+cd solana-web3-toolkit
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 💡 Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Token Launchpad
 
-## Learn More
+- Connect your Solana wallet
+- Fill in token details (name, symbol, supply)
+- Deploy with one click
 
-To learn more about Next.js, take a look at the following resources:
+### Airdrop Feature
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Upload wallet addresses (CSV supported)
+- Set SOL amount per wallet
+- Execute batch distribution
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Transfer System
 
-## Deploy on Vercel
+- Enter recipient's wallet address
+- Specify SOL amount
+- Confirm transaction
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Balance Checker
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Enter wallet address
+- View real-time SOL balance
+- Track transaction history
+
+### Message Signing
+
+- Type your message
+- Sign with connected wallet
+- Verify signatures
+
+## 🔐 Security
+
+- All transactions require wallet confirmation
+- Client-side signature verification
+- No private keys stored
+- Secure RPC endpoints
