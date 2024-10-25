@@ -15,12 +15,9 @@ const WalletMultiButtonDynamic = dynamic(
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const { scrollY } = useScroll();
-
-  // Transform values for content opacity and translation
   const contentOpacity = useTransform(scrollY, [0, 300], [0, 1]);
   const contentTranslateY = useTransform(scrollY, [0, 300], [100, 0]);
 
-  // Transform values for vortex scaling and opacity
   const vortexScale = useTransform(scrollY, [0, 300], [1, 0.7]);
   const vortexOpacity = useTransform(scrollY, [0, 300], [1, 0.3]);
 
@@ -32,7 +29,6 @@ export default function Home() {
 
   return (
     <div className="w-full overflow-x-hidden bg-black relative">
-      {/* Full screen vortex container */}
       <motion.div
         className="fixed inset-0 w-full h-screen"
         style={{
@@ -42,13 +38,8 @@ export default function Home() {
       >
         <Vortex backgroundColor="black" className="w-full h-full" />
       </motion.div>
-
-      {/* Scrollable content */}
       <div className="relative min-h-[200vh]">
-        {/* Spacer to push content down */}
         <div className="h-screen" />
-
-        {/* Main content section */}
         <motion.div
           className="relative bg-black/50 backdrop-blur-sm"
           style={{
