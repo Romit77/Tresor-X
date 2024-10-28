@@ -28,7 +28,7 @@ export default function Home() {
   if (!mounted) return null;
 
   return (
-    <div className="w-full overflow-x-hidden bg-black relative">
+    <main className="relative bg-black">
       <motion.div
         className="fixed inset-0 w-full h-screen"
         style={{
@@ -38,6 +38,7 @@ export default function Home() {
       >
         <Vortex backgroundColor="black" className="w-full h-full" />
       </motion.div>
+
       <div className="relative min-h-[200vh]">
         <div className="h-screen" />
         <motion.div
@@ -47,7 +48,7 @@ export default function Home() {
             y: contentTranslateY,
           }}
         >
-          <div className="max-w-6xl mx-auto px-4 text-center py-20">
+          <div className="container max-w-6xl mx-auto px-4 text-center py-20">
             <div className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -74,10 +75,9 @@ export default function Home() {
               </div>
             </div>
           </div>
-
           <Bento />
         </motion.div>
       </div>
-    </div>
+    </main>
   );
 }

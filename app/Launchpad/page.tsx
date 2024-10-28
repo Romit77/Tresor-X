@@ -34,10 +34,16 @@ export default function TokenLaunchpad() {
   const [symbol, setSymbol] = useState("");
 
   const tokenSchema = z.object({
-    name: z.string().min(3),
-    symbol: z.string().min(2),
+    name: z
+      .string()
+      .min(3, { message: "Name must contain atleast 3 characters" }),
+    symbol: z
+      .string()
+      .min(2, { message: "Symbol must contain atleast 3 characters" }),
     imgUrl: z.string().url("image must be a valid url"),
-    initialSupply: z.number().min(10),
+    initialSupply: z
+      .number()
+      .min(1, { message: "Minimum supply must be greater than 0" }),
   });
 
   async function createToken() {
@@ -54,8 +60,21 @@ export default function TokenLaunchpad() {
     });
 
     if (!parsedInput.success) {
-      toast.error("enter valid inputs");
-      console.log(parsedInput.error.format());
+      const errorMessages = parsedInput.error.format();
+      if (errorMessages.name?._errors) {
+        toast.error(`Name: ${errorMessages.name._errors.join(", ")}`);
+      }
+      if (errorMessages.symbol?._errors) {
+        toast.error(`Symbol: ${errorMessages.symbol._errors.join(", ")}`);
+      }
+      if (errorMessages.imgUrl?._errors) {
+        toast.error(`Image URL: ${errorMessages.imgUrl._errors.join(", ")}`);
+      }
+      if (errorMessages.initialSupply?._errors) {
+        toast.error(
+          `Initial Supply: ${errorMessages.initialSupply._errors.join(", ")}`
+        );
+      }
       return;
     }
 

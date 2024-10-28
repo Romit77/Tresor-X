@@ -253,7 +253,7 @@ export const Vortex = (props: VortexProps) => {
           "relative z-10 flex flex-col items-center justify-center h-screen"
         )}
       >
-        <h1 className="bg-gradient-to-r from-purple-500 to-blue-500 text-transparent bg-clip-text text-7xl font-semibold">
+        <h1 className="bg-gradient-to-r from-purple-500 to-blue-500 text-transparent bg-clip-text text-7xl font-bold">
           TresorX
         </h1>
         <p className="text-white  text-2xl mt-4">
