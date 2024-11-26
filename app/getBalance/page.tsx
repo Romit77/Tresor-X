@@ -5,6 +5,19 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { toast, Toaster } from "sonner";
+<style jsx global>{`
+  @keyframes textGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+  .animate-text-gradient {
+    animation: textGradient 5s linear infinite;
+  }
+`}</style>;
 
 const WalletMultiButton = dynamic(
   async () =>

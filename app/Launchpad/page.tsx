@@ -198,48 +198,56 @@ export default function TokenLaunchpad() {
   return (
     <>
       <Toaster theme="dark" position="bottom-right" />
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-black bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
+      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-black bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] animate-gradient">
         <div className="absolute top-4 right-4">
-          <WalletMultiButton className="!bg-zinc-900 hover:!bg-zinc-800 !text-white !border !border-zinc-700" />
+          <WalletMultiButton className="!bg-zinc-900 hover:!bg-zinc-800 !text-white !border !border-zinc-700 transition-all duration-300 hover:!border-purple-500/50" />
         </div>
-        <h1 className="text-6xl font-bold mb-10 p-5 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">
+        <h1 className="text-6xl font-bold mb-10 p-5 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 animate-text-gradient bg-[length:200%_auto]">
           Create and launch your own Tokens!
         </h1>
-        <div className="w-full max-w-md space-y-6 bg-zinc-900/50 p-8 rounded-xl shadow-2xl border border-zinc-800/50 backdrop-blur-sm">
-          <div className="space-y-2">
-            <label className="text-sm text-zinc-400 ml-1">Token Name</label>
+        <div className="w-full max-w-md space-y-6 bg-zinc-900/50 p-8 rounded-xl shadow-2xl border border-zinc-800/50 backdrop-blur-sm hover:border-purple-500/20 transition-all duration-300">
+          <div className="space-y-2 group">
+            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
+              Token Name
+            </label>
             <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200"
+              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
               type="text"
               placeholder="Enter token name"
               onChange={(e) => setName(e.target.value)}
               value={name}
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-zinc-400 ml-1">Token Symbol</label>
+          <div className="space-y-2 group">
+            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
+              Token Symbol
+            </label>
             <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200"
+              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
               type="text"
               placeholder="Enter token symbol"
               onChange={(e) => setSymbol(e.target.value)}
               value={symbol}
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-zinc-400 ml-1">Image URL</label>
+          <div className="space-y-2 group">
+            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
+              Image URL
+            </label>
             <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200"
+              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
               type="text"
               placeholder="Enter image URL"
               onChange={(e) => setImgUrl(e.target.value)}
               value={imgUrl}
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-zinc-400 ml-1">Initial Supply</label>
+          <div className="space-y-2 group">
+            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
+              Initial Supply
+            </label>
             <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200"
+              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
               type="number"
               placeholder="Enter initial supply"
               onChange={(e) => setInitialSupply(Number(e.target.value))}
@@ -247,16 +255,55 @@ export default function TokenLaunchpad() {
             />
           </div>
           <button
-            className="w-full px-6 py-3 text-white bg-gradient-to-r from-purple-500 to-blue-500 font-semibold rounded-lg transition duration-200 hover:opacity-90 hover:scale-[0.99] transform active:scale-[0.98] mt-4"
+            className="w-full px-6 py-3 text-white bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-[length:200%] animate-button-gradient font-semibold rounded-lg transition-all duration-300 hover:opacity-90 hover:scale-[0.99] transform active:scale-[0.98] mt-4 hover:shadow-lg hover:shadow-purple-500/20"
             onClick={createToken}
           >
             Create Token
           </button>
-          <p className="text-zinc-500 text-center text-sm mt-4">
+          <p className="text-zinc-500 text-center text-sm mt-4 hover:text-purple-400 transition-colors duration-200">
             Connect your wallet to start creating tokens on Solana
           </p>
         </div>
       </div>
+      <style jsx global>{`
+        @keyframes gradient {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        .animate-gradient {
+          animation: gradient 15s ease infinite;
+          background-size: 200% 200%;
+        }
+        .animate-text-gradient {
+          animation: textGradient 5s linear infinite;
+        }
+        @keyframes textGradient {
+          0% {
+            background-position: 0% 50%;
+          }
+          100% {
+            background-position: 200% 50%;
+          }
+        }
+        .animate-button-gradient {
+          animation: buttonGradient 3s linear infinite;
+        }
+        @keyframes buttonGradient {
+          0% {
+            background-position: 0% 50%;
+          }
+          100% {
+            background-position: 200% 50%;
+          }
+        }
+      `}</style>
     </>
   );
 }
