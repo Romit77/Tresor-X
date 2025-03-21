@@ -45,7 +45,7 @@ export default function Component() {
     {
       title: "Create NFTs",
       subheading: "Mint unique digital treasures - Coming Soon",
-      href: "/",
+      href: "/NFTCreation",
       gridArea: "3 / 1 / 4 / 4",
       icon: "🎨",
     },
