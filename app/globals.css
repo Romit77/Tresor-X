@@ -2,68 +2,335 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
+:root {
+  --crypto-purple: #8b5cf6;
+  --crypto-blue: #3b82f6;
+  --crypto-green: #10b981;
+  --crypto-orange: #f59e0b;
+  --crypto-bg: #000000;
+  --crypto-surface: #0f0f0f;
+  --crypto-border: #1f1f1f;
+  --crypto-text: #ffffff;
+  --crypto-text-muted: #9ca3af;
+}
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background: var(--crypto-bg);
+  color: var(--crypto-text);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  scroll-behavior: smooth;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+.gradient-text {
+  background: linear-gradient(135deg, var(--crypto-purple), var(--crypto-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.grid-background {
+  background-image: linear-gradient(
+      rgba(139, 92, 246, 0.1) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+  0% {
+    transform: translate(0, 0);
   }
-  body {
-    @apply bg-background text-foreground;
+  100% {
+    transform: translate(50px, 50px);
+  }
+}
+
+.nav-glass {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.crypto-card {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 15, 15, 0.9) 0%,
+    rgba(31, 31, 31, 0.8) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.crypto-card:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.1);
+}
+
+.crypto-btn {
+  background: linear-gradient(135deg, var(--crypto-purple), var(--crypto-blue));
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.crypto-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+}
+
+.crypto-btn:active {
+  transform: translateY(0);
+}
+
+.crypto-btn-secondary {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 0.75rem 2rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.crypto-btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+}
+
+.crypto-input {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(15, 15, 15, 0.8);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.crypto-input:focus {
+  outline: none;
+  border-color: var(--crypto-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.crypto-input::placeholder {
+  color: var(--crypto-text-muted);
+}
+
+.wallet-adapter-button {
+  background: linear-gradient(
+    135deg,
+    var(--crypto-purple),
+    var(--crypto-blue)
+  ) !important;
+  border: none !important;
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 1.5rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.wallet-adapter-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3) !important;
+}
+
+.wallet-adapter-button-trigger {
+  background: linear-gradient(
+    135deg,
+    var(--crypto-purple),
+    var(--crypto-blue)
+  ) !important;
+}
+
+.wallet-adapter-modal {
+  background: var(--crypto-surface) !important;
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+  border-radius: 1rem !important;
+}
+
+.wallet-adapter-modal-title {
+  color: var(--crypto-text) !important;
+}
+
+.wallet-adapter-modal-list {
+  background: var(--crypto-surface) !important;
+}
+
+.wallet-adapter-modal-list-item {
+  background: rgba(15, 15, 15, 0.5) !important;
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+  border-radius: 0.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.wallet-adapter-modal-list-item:hover {
+  background: rgba(139, 92, 246, 0.1) !important;
+  border-color: rgba(139, 92, 246, 0.4) !important;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(-10px) rotate(270deg);
+  }
+}
+
+.floating-particle {
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating-particle:nth-child(2) {
+  animation-delay: 1s;
+}
+.floating-particle:nth-child(3) {
+  animation-delay: 2s;
+}
+.floating-particle:nth-child(4) {
+  animation-delay: 3s;
+}
+.floating-particle:nth-child(5) {
+  animation-delay: 4s;
+}
+.floating-particle:nth-child(6) {
+  animation-delay: 5s;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.pulse-particle {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--crypto-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--crypto-purple), var(--crypto-blue));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #a855f7, #2563eb);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.success-state {
+  border-color: var(--crypto-green) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+.error-state {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .crypto-btn,
+  .crypto-btn-secondary {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  .crypto-card {
+    padding: 1.5rem;
+  }
+
+  .gradient-text {
+    font-size: 2.5rem;
+  }
+}
+
+/* Dark theme for system preference */
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
   }
 }

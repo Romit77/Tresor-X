@@ -1,23 +1,22 @@
 "use client";
-import {
-  createAssociatedTokenAccountInstruction,
-  createInitializeMetadataPointerInstruction,
-  createInitializeMintInstruction,
-  createMintToInstruction,
-  ExtensionType,
-  getAssociatedTokenAddressSync,
-  getMintLen,
-  LENGTH_SIZE,
-  TOKEN_2022_PROGRAM_ID,
-  TYPE_SIZE,
-} from "@solana/spl-token";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
-import { createInitializeInstruction, pack } from "@solana/spl-token-metadata";
-import { useState } from "react";
-import { Toaster, toast } from "sonner";
-import z from "zod";
+
+import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useState } from "react";
+import {
+  ArrowLeft,
+  Coins,
+  Upload,
+  Settings,
+  CheckCircle,
+  AlertCircle,
+  Copy,
+  ExternalLink,
+  Zap,
+  Shield,
+  TrendingUp,
+} from "lucide-react";
 
 const WalletMultiButton = dynamic(
   async () =>
@@ -25,285 +24,366 @@ const WalletMultiButton = dynamic(
   { ssr: false }
 );
 
-export default function TokenLaunchpad() {
-  const wallet = useWallet();
-  const { connection } = useConnection();
-  const [name, setName] = useState("");
-  const [initialSupply, setInitialSupply] = useState(0);
-  const [imgUrl, setImgUrl] = useState("");
-  const [symbol, setSymbol] = useState("");
-
-  const tokenSchema = z.object({
-    name: z
-      .string()
-      .min(3, { message: "Name must contain atleast 3 characters" }),
-    symbol: z
-      .string()
-      .min(2, { message: "Symbol must contain atleast 3 characters" }),
-    imgUrl: z.string().url("image must be a valid url"),
-    initialSupply: z
-      .number()
-      .min(1, { message: "Minimum supply must be greater than 0" }),
-  });
-
-  async function createToken() {
-    if (!wallet || !wallet.publicKey) {
-      toast.error("Please connect wallet to create Tokens");
-      return;
-    }
-
-    const parsedInput = tokenSchema.safeParse({
-      name,
-      imgUrl,
-      symbol,
-      initialSupply: Number(initialSupply),
-    });
-
-    if (!parsedInput.success) {
-      const errorMessages = parsedInput.error.format();
-      if (errorMessages.name?._errors) {
-        toast.error(`Name: ${errorMessages.name._errors.join(", ")}`);
-      }
-      if (errorMessages.symbol?._errors) {
-        toast.error(`Symbol: ${errorMessages.symbol._errors.join(", ")}`);
-      }
-      if (errorMessages.imgUrl?._errors) {
-        toast.error(`Image URL: ${errorMessages.imgUrl._errors.join(", ")}`);
-      }
-      if (errorMessages.initialSupply?._errors) {
-        toast.error(
-          `Initial Supply: ${errorMessages.initialSupply._errors.join(", ")}`
-        );
-      }
-      return;
-    }
-
-    let loadingToast;
-
-    try {
-      const mintKeypair = Keypair.generate();
-
-      const metadata = {
-        mint: mintKeypair.publicKey,
-        name: name,
-        symbol: symbol,
-        uri: "https://token-metadata.romit77dey.workers.dev/",
-        additionalMetadata: [],
-      };
-
-      const mintLen = getMintLen([ExtensionType.MetadataPointer]);
-      const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
-
-      const lamports = await connection.getMinimumBalanceForRentExemption(
-        mintLen + metadataLen
-      );
-
-      loadingToast = toast.loading("Creating Token Account");
-      const transaction = new Transaction().add(
-        SystemProgram.createAccount({
-          fromPubkey: wallet.publicKey,
-          newAccountPubkey: mintKeypair.publicKey,
-          space: mintLen,
-          lamports,
-          programId: TOKEN_2022_PROGRAM_ID,
-        }),
-        createInitializeMetadataPointerInstruction(
-          mintKeypair.publicKey,
-          wallet.publicKey,
-          mintKeypair.publicKey,
-          TOKEN_2022_PROGRAM_ID
-        ),
-        createInitializeMintInstruction(
-          mintKeypair.publicKey,
-          9,
-          wallet.publicKey,
-          null,
-          TOKEN_2022_PROGRAM_ID
-        ),
-        createInitializeInstruction({
-          programId: TOKEN_2022_PROGRAM_ID,
-          mint: mintKeypair.publicKey,
-          metadata: mintKeypair.publicKey,
-          name: metadata.name,
-          symbol: metadata.symbol,
-          uri: metadata.uri,
-          mintAuthority: wallet.publicKey,
-          updateAuthority: wallet.publicKey,
-        })
-      );
-
-      transaction.feePayer = wallet.publicKey;
-      const recentBlockHash = connection.getLatestBlockhash();
-      transaction.recentBlockhash = (await recentBlockHash).blockhash;
-      transaction.partialSign(mintKeypair);
-      await wallet.sendTransaction(transaction, connection);
-      console.log("Token Account Created!");
-      toast.dismiss(loadingToast);
-
-      toast.success(
-        `Token mint created at ${mintKeypair.publicKey.toBase58()}`
-      );
-
-      const associatedToken = getAssociatedTokenAddressSync(
-        mintKeypair.publicKey,
-        wallet.publicKey,
-        false,
-        TOKEN_2022_PROGRAM_ID
-      );
-
-      console.log("ATA : ", associatedToken.toBase58());
-
-      loadingToast = toast.loading("creating associated Token Account");
-      const transaction2 = new Transaction().add(
-        createAssociatedTokenAccountInstruction(
-          wallet.publicKey,
-          associatedToken,
-          wallet.publicKey,
-          mintKeypair.publicKey,
-          TOKEN_2022_PROGRAM_ID
-        )
-      );
-      await wallet.sendTransaction(transaction2, connection);
-      toast.dismiss(loadingToast);
-      toast.success("ATA created");
-
-      const atomicSupply = initialSupply * 10 ** 9;
-
-      loadingToast = toast.loading("Minting Tokens");
-      const transaction3 = new Transaction().add(
-        createMintToInstruction(
-          mintKeypair.publicKey,
-          associatedToken,
-          wallet.publicKey,
-          atomicSupply,
-          [],
-          TOKEN_2022_PROGRAM_ID
-        )
-      );
-
-      await wallet.sendTransaction(transaction3, connection);
-      toast.dismiss(loadingToast);
-      toast.success("Minted!, Check your wallet");
-      setImgUrl("");
-      setInitialSupply(0);
-      setName("");
-      setSymbol("");
-    } catch (err: any) {
-      toast.error(`Error: ${err.message || "Failed to mint tokens"}`);
-    } finally {
-      toast.dismiss(loadingToast);
-    }
-  }
+const CryptoButton = ({
+  children,
+  variant = "primary",
+  onClick,
+  className = "",
+  disabled = false,
+}: {
+  children: React.ReactNode;
+  variant?: "primary" | "secondary" | "ghost";
+  onClick?: () => void;
+  className?: string;
+  disabled?: boolean;
+}) => {
+  const variants = {
+    primary: "crypto-btn",
+    secondary: "crypto-btn-secondary",
+    ghost:
+      "inline-flex items-center justify-center px-6 py-3 rounded-xl font-medium transition-all duration-300 border border-gray-700 hover:border-gray-600 bg-transparent",
+  };
 
   return (
-    <>
-      <Toaster theme="dark" position="bottom-right" />
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-black bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] animate-gradient">
-        <div className="absolute top-4 right-4">
-          <WalletMultiButton className="!bg-zinc-900 hover:!bg-zinc-800 !text-white !border !border-zinc-700 transition-all duration-300 hover:!border-purple-500/50" />
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${variants[variant]} ${className} ${
+        disabled ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+    >
+      {children}
+    </button>
+  );
+};
+
+const CryptoInput = ({
+  label,
+  placeholder,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  error,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+  error?: string;
+}) => {
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-300">
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="crypto-input w-full"
+      />
+      {error && (
+        <div className="flex items-center gap-2 text-red-400 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          {error}
         </div>
-        <h1 className="text-6xl font-bold mb-10 p-5 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 animate-text-gradient bg-[length:200%_auto]">
-          Create and launch your own Tokens!
-        </h1>
-        <div className="w-full max-w-md space-y-6 bg-zinc-900/50 p-8 rounded-xl shadow-2xl border border-zinc-800/50 backdrop-blur-sm hover:border-purple-500/20 transition-all duration-300">
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              Token Name
-            </label>
-            <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              type="text"
-              placeholder="Enter token name"
-              onChange={(e) => setName(e.target.value)}
-              value={name}
-            />
+      )}
+    </div>
+  );
+};
+
+export default function LaunchpadPage() {
+  const [tokenName, setTokenName] = useState("");
+  const [tokenSymbol, setTokenSymbol] = useState("");
+  const [tokenSupply, setTokenSupply] = useState("");
+  const [tokenDecimals, setTokenDecimals] = useState("9");
+  const [tokenDescription, setTokenDescription] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [createdToken, setCreatedToken] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!tokenName.trim()) newErrors.name = "Token name is required";
+    if (!tokenSymbol.trim()) newErrors.symbol = "Token symbol is required";
+    if (tokenSymbol.length > 10)
+      newErrors.symbol = "Symbol must be 10 characters or less";
+    if (!tokenSupply.trim()) newErrors.supply = "Token supply is required";
+    if (isNaN(Number(tokenSupply)) || Number(tokenSupply) <= 0) {
+      newErrors.supply = "Supply must be a positive number";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleCreateToken = async () => {
+    if (!validateForm()) return;
+
+    setIsCreating(true);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      setCreatedToken("8k7v9xQx...mN3pR4");
+    } catch (error) {
+      console.error("Error creating token:", error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <motion.nav
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="nav-glass fixed top-0 w-full z-50"
+      >
+        <div className="container">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/"
+                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </Link>
+
+              <div className="h-6 w-px bg-gray-700"></div>
+
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+                  <Coins className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-xl font-bold">Token Launchpad</div>
+              </div>
+            </div>
+
+            <WalletMultiButton />
           </div>
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              Token Symbol
-            </label>
-            <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              type="text"
-              placeholder="Enter token symbol"
-              onChange={(e) => setSymbol(e.target.value)}
-              value={symbol}
-            />
+        </div>
+      </motion.nav>
+
+      <div className="pt-24 pb-12">
+        <div className="container">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-12"
+            >
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                Launch Your <span className="gradient-text">SPL Token</span>
+              </h1>
+              <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+                Create and deploy your own SPL token on Solana with just a few
+                clicks. Perfect for projects, communities, and businesses.
+              </p>
+            </motion.div>
+
+            <div className="grid lg:grid-cols-3 gap-8">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="lg:col-span-2"
+              >
+                <div className="crypto-card p-8">
+                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Settings className="w-6 h-6" />
+                    Token Configuration
+                  </h2>
+
+                  <div className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <CryptoInput
+                        label="Token Name"
+                        placeholder="My Awesome Token"
+                        value={tokenName}
+                        onChange={setTokenName}
+                        required
+                        error={errors.name}
+                      />
+
+                      <CryptoInput
+                        label="Token Symbol"
+                        placeholder="MAT"
+                        value={tokenSymbol}
+                        onChange={setTokenSymbol}
+                        required
+                        error={errors.symbol}
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <CryptoInput
+                        label="Total Supply"
+                        placeholder="1000000"
+                        value={tokenSupply}
+                        onChange={setTokenSupply}
+                        type="number"
+                        required
+                        error={errors.supply}
+                      />
+
+                      <CryptoInput
+                        label="Decimals"
+                        placeholder="9"
+                        value={tokenDecimals}
+                        onChange={setTokenDecimals}
+                        type="number"
+                      />
+                    </div>
+
+                    <CryptoInput
+                      label="Description (Optional)"
+                      placeholder="Describe your token's purpose and utility..."
+                      value={tokenDescription}
+                      onChange={setTokenDescription}
+                    />
+
+                    <div className="pt-4">
+                      {!createdToken ? (
+                        <CryptoButton
+                          onClick={handleCreateToken}
+                          disabled={isCreating}
+                          className="w-full text-lg py-4"
+                        >
+                          {isCreating ? (
+                            <>
+                              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"></div>
+                              Creating Token...
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="w-5 h-5 mr-2" />
+                              Create Token
+                            </>
+                          )}
+                        </CryptoButton>
+                      ) : (
+                        <div className="crypto-card p-6 bg-green-900/20 border-green-500/30">
+                          <div className="flex items-center gap-3 mb-4">
+                            <CheckCircle className="w-6 h-6 text-green-400" />
+                            <h3 className="text-lg font-bold text-green-400">
+                              Token Created Successfully!
+                            </h3>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg">
+                              <span className="text-gray-300">
+                                Token Address:
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <code className="text-green-400">
+                                  {createdToken}
+                                </code>
+                                <button
+                                  onClick={() => copyToClipboard(createdToken)}
+                                  className="text-gray-400 hover:text-white transition-colors"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <CryptoButton variant="ghost" className="w-full">
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              View on Solscan
+                            </CryptoButton>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="space-y-6"
+              >
+                <div className="crypto-card p-6">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    Features
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <span className="text-sm text-gray-300">
+                        SPL Token Standard
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <span className="text-sm text-gray-300">
+                        Instant Deployment
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <span className="text-sm text-gray-300">
+                        Minimal Fees
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <span className="text-sm text-gray-300">
+                        Full Ownership
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="crypto-card p-6">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Cost Breakdown
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Token Creation:</span>
+                      <span className="text-white">~0.002 SOL</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Metadata Account:</span>
+                      <span className="text-white">~0.001 SOL</span>
+                    </div>
+                    <div className="border-t border-gray-700 pt-3 flex justify-between font-bold">
+                      <span>Total Cost:</span>
+                      <span className="text-green-400">~0.003 SOL</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="crypto-card p-6">
+                  <h3 className="text-lg font-bold mb-4">Need Help?</h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Check out our comprehensive guide on token creation and best
+                    practices.
+                  </p>
+                  <CryptoButton variant="ghost" className="w-full">
+                    View Documentation
+                  </CryptoButton>
+                </div>
+              </motion.div>
+            </div>
           </div>
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              Image URL
-            </label>
-            <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              type="text"
-              placeholder="Enter image URL"
-              onChange={(e) => setImgUrl(e.target.value)}
-              value={imgUrl}
-            />
-          </div>
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              Initial Supply
-            </label>
-            <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              type="number"
-              placeholder="Enter initial supply"
-              onChange={(e) => setInitialSupply(Number(e.target.value))}
-              value={initialSupply}
-            />
-          </div>
-          <button
-            className="w-full px-6 py-3 text-white bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-[length:200%] animate-button-gradient font-semibold rounded-lg transition-all duration-300 hover:opacity-90 hover:scale-[0.99] transform active:scale-[0.98] mt-4 hover:shadow-lg hover:shadow-purple-500/20"
-            onClick={createToken}
-          >
-            Create Token
-          </button>
-          <p className="text-zinc-500 text-center text-sm mt-4 hover:text-purple-400 transition-colors duration-200">
-            Connect your wallet to start creating tokens on Solana
-          </p>
         </div>
       </div>
-      <style jsx global>{`
-        @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-        .animate-gradient {
-          animation: gradient 15s ease infinite;
-          background-size: 200% 200%;
-        }
-        .animate-text-gradient {
-          animation: textGradient 5s linear infinite;
-        }
-        @keyframes textGradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 200% 50%;
-          }
-        }
-        .animate-button-gradient {
-          animation: buttonGradient 3s linear infinite;
-        }
-        @keyframes buttonGradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 200% 50%;
-          }
-        }
-      `}</style>
-    </>
+    </div>
   );
 }

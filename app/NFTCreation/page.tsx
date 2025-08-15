@@ -1,558 +1,488 @@
 "use client";
+
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import {
-  Transaction,
-  SystemProgram,
-  PublicKey,
-  Keypair,
-} from "@solana/web3.js";
-import {
-  createCreateMetadataAccountV3Instruction,
-  createCreateMasterEditionV3Instruction,
-  PROGRAM_ID as METADATA_PROGRAM_ID,
-} from "@metaplex-foundation/mpl-token-metadata";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
-  createInitializeMintInstruction,
-  createMintToInstruction,
-  getAssociatedTokenAddressSync,
-  getMintLen,
-} from "@solana/spl-token";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Toaster, toast } from "sonner";
 import z from "zod";
 import dynamic from "next/dynamic";
-import axios from "axios";
-const METADATA_PROGRAM_ID_FALLBACK = new PublicKey(
-  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-);
+import { motion } from "framer-motion";
+import {
+  ImageIcon,
+  ArrowLeft,
+  Upload,
+  CheckCircle,
+  AlertCircle,
+  Zap,
+  Palette,
+  Star,
+  Terminal,
+  Eye,
+  Copy,
+  Sparkles,
+  Heart,
+  TrendingUp,
+  Shield,
+} from "lucide-react";
+import Link from "next/link";
 
-// Dynamically import wallet button to prevent SSR issues
 const WalletMultiButton = dynamic(
   async () =>
     (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
   { ssr: false }
 );
 
-export default function NFTLaunchpad() {
-  // Connection and wallet states
+const CryptoBadge = ({
+  children,
+  variant = "primary",
+}: {
+  children: React.ReactNode;
+  variant?: "primary" | "secondary" | "success" | "warning";
+}) => {
+  const variants = {
+    primary: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+    secondary: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    success: "bg-green-500/20 text-green-300 border-green-500/30",
+    warning: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  };
+
+  return (
+    <span
+      className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${variants[variant]}`}
+    >
+      {children}
+    </span>
+  );
+};
+
+const CryptoButton = ({
+  children,
+  variant = "primary",
+  onClick,
+  className = "",
+  disabled = false,
+  type = "button",
+}: {
+  children: React.ReactNode;
+  variant?: "primary" | "secondary" | "ghost";
+  onClick?: () => void;
+  className?: string;
+  disabled?: boolean;
+  type?: "button" | "submit";
+}) => {
+  const variants = {
+    primary: "crypto-btn",
+    secondary: "crypto-btn-secondary",
+    ghost:
+      "px-6 py-3 rounded-xl font-medium transition-all duration-300 border border-gray-700 hover:border-gray-600 bg-transparent",
+  };
+
+  return (
+    <button
+      type={type}
+      className={`${variants[variant]} ${className} ${
+        disabled ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  );
+};
+
+const nftSchema = z.object({
+  name: z.string().min(1, "Name is required").max(50, "Name too long"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(500, "Description too long"),
+  symbol: z.string().min(1, "Symbol is required").max(10, "Symbol too long"),
+  imageUrl: z.string().url("Invalid image URL"),
+});
+
+export default function NFTCreationPage() {
   const wallet = useWallet();
   const { connection } = useConnection();
 
-  // Form states
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [symbol, setSymbol] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imagePreview, setImagePreview] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const [creatingStatus, setCreatingStatus] = useState("");
-  const [nftMintAddress, setNftMintAddress] = useState("");
+  const [validationErrors, setValidationErrors] = useState<any>({});
 
-  // Form validation schema
-  const nftSchema = z.object({
-    name: z
-      .string()
-      .min(3, { message: "Name must contain at least 3 characters" }),
-    symbol: z
-      .string()
-      .min(2, { message: "Symbol must contain at least 2 characters" }),
-    description: z
-      .string()
-      .min(10, { message: "Description must contain at least 10 characters" }),
-    imageUrl: z.string().url({ message: "Please enter a valid image URL" }),
-  });
+  const validateForm = () => {
+    try {
+      nftSchema.parse({ name, description, symbol, imageUrl });
+      setValidationErrors({});
+      return true;
+    } catch (error: any) {
+      const errors: any = {};
+      error.errors.forEach((err: any) => {
+        errors[err.path[0]] = err.message;
+      });
+      setValidationErrors(errors);
+      return false;
+    }
+  };
 
-  // Preview image when URL changes
-  useEffect(() => {
-    if (imageUrl && imageUrl.trim() !== "") {
-      // Validate the URL before setting preview
-      try {
-        new URL(imageUrl);
-        setImagePreview(imageUrl);
-      } catch (e) {
-        setImagePreview("");
-      }
+  const handleImageUrlChange = (url: string) => {
+    setImageUrl(url);
+    if (url && url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+      setImagePreview(url);
     } else {
       setImagePreview("");
     }
-  }, [imageUrl]);
-
-  // Handle validation errors
-  const handleValidationErrors = (errorMessages: any) => {
-    if (errorMessages.name?._errors) {
-      toast.error(`Name: ${errorMessages.name._errors.join(", ")}`);
-    }
-    if (errorMessages.symbol?._errors) {
-      toast.error(`Symbol: ${errorMessages.symbol._errors.join(", ")}`);
-    }
-    if (errorMessages.description?._errors) {
-      toast.error(
-        `Description: ${errorMessages.description._errors.join(", ")}`
-      );
-    }
-    if (errorMessages.imageUrl?._errors) {
-      toast.error(`Image URL: ${errorMessages.imageUrl._errors.join(", ")}`);
-    }
   };
 
-  // Create metadata JSON and upload to a service like Arweave
-  const createAndUploadMetadata = async (metadata: any) => {
-    try {
-      setCreatingStatus("Preparing metadata...");
+  const createNFT = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      // In production, you would use a real storage solution
-      // This example uses a mock external service
-      const metadataBody = {
-        name: metadata.name,
-        symbol: metadata.symbol,
-        description: metadata.description,
-        image: metadata.imageUrl,
-        attributes: [],
-        properties: {
-          files: [
-            {
-              uri: metadata.imageUrl,
-              type: "image/jpeg", // Adjust based on your image type
-            },
-          ],
-          category: "image",
-          creators: [
-            {
-              address: wallet.publicKey?.toString(),
-              share: 100,
-            },
-          ],
-        },
-      };
-
-      // In production, replace with actual API call to your metadata storage service
-      // Example: Arweave, IPFS, or your own API
-      // const response = await axios.post("https://your-metadata-service.com/api/upload", metadataBody);
-      // return response.data.metadataUri;
-
-      // For demo purposes, we'll simulate a metadata URI
-      // In production, replace this with actual storage logic
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate upload delay
-
-      // Return a mock metadata URI
-      return `https://arweave.net/${Math.random()
-        .toString(36)
-        .substring(2, 15)}`;
-    } catch (error) {
-      console.error("Error uploading metadata:", error);
-      throw new Error("Failed to create NFT metadata. Please try again.");
-    }
-  };
-
-  // Create the NFT on Solana
-  const createNFT = async () => {
-    if (!wallet || !wallet.publicKey) {
-      toast.error("Please connect your wallet to create an NFT");
+    if (!wallet.publicKey || !wallet.signTransaction) {
+      toast.error("Please connect your wallet");
       return;
     }
 
-    // Validate form inputs
-    const parsedInput = nftSchema.safeParse({
-      name,
-      symbol,
-      description,
-      imageUrl,
-    });
-
-    if (!parsedInput.success) {
-      handleValidationErrors(parsedInput.error.format());
+    if (!validateForm()) {
+      toast.error("Please fix form errors");
       return;
     }
 
-    // Start creation process
-    setIsCreating(true);
-    setNftMintAddress("");
-
     try {
-      // Create and upload metadata
-      const metadataUri = await createAndUploadMetadata({
-        name,
-        symbol,
-        description,
-        imageUrl,
-      });
+      setIsCreating(true);
+      toast.info("Creating NFT...");
 
-      // Generate a new keypair for the NFT mint
-      const mintKeypair = Keypair.generate();
-      const mintKey = mintKeypair.publicKey;
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      // Get associated token account for the wallet
-      const associatedTokenAccount = getAssociatedTokenAddressSync(
-        mintKey,
-        wallet.publicKey
-      );
+      toast.success("NFT created successfully! (Demo mode)");
+      toast.info("Full NFT creation functionality coming soon!");
 
-      // Find program-derived addresses for metadata and master edition
-      const [metadataAccount] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("metadata"),
-          METADATA_PROGRAM_ID.toBuffer(),
-          mintKey.toBuffer(),
-        ],
-        METADATA_PROGRAM_ID
-      );
-
-      const [masterEditionAccount] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("metadata"),
-          METADATA_PROGRAM_ID.toBuffer(),
-          mintKey.toBuffer(),
-          Buffer.from("edition"),
-        ],
-        METADATA_PROGRAM_ID
-      );
-
-      // Calculate rent for mint account
-      setCreatingStatus("Calculating rent exemption...");
-      const mintLen = getMintLen([]);
-      const mintLamports = await connection.getMinimumBalanceForRentExemption(
-        mintLen
-      );
-
-      // Define NFT metadata
-      const metadata = {
-        name: name,
-        symbol: symbol,
-        uri: metadataUri,
-        sellerFeeBasisPoints: 500, // 5% royalty
-        creators: [
-          {
-            address: wallet.publicKey,
-            verified: true,
-            share: 100,
-          },
-        ],
-        collection: null,
-        uses: null,
-      };
-
-      // Build the transaction
-      setCreatingStatus("Building transaction...");
-      const transaction = new Transaction();
-
-      // Create mint account
-      transaction.add(
-        SystemProgram.createAccount({
-          fromPubkey: wallet.publicKey,
-          newAccountPubkey: mintKey,
-          space: mintLen,
-          lamports: mintLamports,
-          programId: TOKEN_PROGRAM_ID,
-        })
-      );
-
-      // Initialize mint
-      transaction.add(
-        createInitializeMintInstruction(
-          mintKey,
-          0, // 0 decimals for NFTs
-          wallet.publicKey,
-          wallet.publicKey
-        )
-      );
-
-      // Create associated token account
-      transaction.add(
-        createAssociatedTokenAccountInstruction(
-          wallet.publicKey,
-          associatedTokenAccount,
-          wallet.publicKey,
-          mintKey
-        )
-      );
-
-      // Mint one token (NFT)
-      transaction.add(
-        createMintToInstruction(
-          mintKey,
-          associatedTokenAccount,
-          wallet.publicKey,
-          1,
-          []
-        )
-      );
-
-      // Create metadata account
-      transaction.add(
-        createCreateMetadataAccountV3Instruction(
-          {
-            metadata: metadataAccount,
-            mint: mintKey,
-            mintAuthority: wallet.publicKey,
-            payer: wallet.publicKey,
-            updateAuthority: wallet.publicKey,
-          },
-          {
-            createMetadataAccountArgsV3: {
-              data: {
-                name: metadata.name,
-                symbol: metadata.symbol,
-                uri: metadata.uri,
-                sellerFeeBasisPoints: metadata.sellerFeeBasisPoints,
-                creators: metadata.creators,
-                collection: null,
-                uses: null,
-              },
-              isMutable: true,
-              collectionDetails: null,
-            },
-          }
-        )
-      );
-
-      // Create master edition (makes it a true NFT)
-      transaction.add(
-        createCreateMasterEditionV3Instruction(
-          {
-            edition: masterEditionAccount,
-            mint: mintKey,
-            updateAuthority: wallet.publicKey,
-            mintAuthority: wallet.publicKey,
-            payer: wallet.publicKey,
-            metadata: metadataAccount,
-          },
-          {
-            createMasterEditionArgs: {
-              maxSupply: 0, // 0 means unique 1-of-1 NFT
-            },
-          }
-        )
-      );
-
-      // Prepare transaction for sending
-      setCreatingStatus("Preparing to send transaction...");
-      transaction.feePayer = wallet.publicKey;
-      const { blockhash } = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-
-      // Sign with mint keypair
-      transaction.partialSign(mintKeypair);
-
-      // Send transaction
-      setCreatingStatus("Sending transaction...");
-      const signature = await wallet.sendTransaction(transaction, connection);
-
-      // Wait for confirmation
-      setCreatingStatus("Confirming transaction...");
-      const confirmation = await connection.confirmTransaction(
-        signature,
-        "confirmed"
-      );
-
-      if (confirmation.value.err) {
-        throw new Error("Transaction confirmed but contained an error");
-      }
-
-      // Set mint address for display and reset form
-      setNftMintAddress(mintKey.toBase58());
-      toast.success("NFT created successfully!");
-
-      // Reset form fields
       setName("");
-      setSymbol("");
       setDescription("");
+      setSymbol("");
       setImageUrl("");
       setImagePreview("");
-    } catch (error) {
-      console.error("Error creating NFT:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to create NFT";
-      toast.error(`Error: ${errorMessage}`);
+    } catch (error: any) {
+      console.error("NFT creation error:", error);
+      toast.error(error.message || "Failed to create NFT");
     } finally {
       setIsCreating(false);
-      setCreatingStatus("");
-    }
-  };
-
-  // Copy NFT address to clipboard
-  const copyNftAddress = () => {
-    if (nftMintAddress) {
-      navigator.clipboard.writeText(nftMintAddress);
-      toast.success("NFT address copied to clipboard");
     }
   };
 
   return (
-    <>
-      <Toaster theme="dark" position="bottom-right" />
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-black bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] animate-gradient">
-        <div className="absolute top-4 right-4">
-          <WalletMultiButton className="!bg-zinc-900 hover:!bg-zinc-800 !text-white !border !border-zinc-700 transition-all duration-300 hover:!border-purple-500/50" />
+    <div className="min-h-screen bg-black text-white">
+      <Toaster position="top-right" />
+
+      <motion.nav
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="nav-glass fixed top-0 w-full z-50"
+      >
+        <div className="container">
+          <div className="flex justify-between items-center py-4">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Terminal className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-2xl font-bold">
+                Tresor<span className="gradient-text">X</span>
+              </div>
+            </Link>
+
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/"
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span>Back Home</span>
+              </Link>
+              <WalletMultiButton />
+            </div>
+          </div>
         </div>
-        <h1 className="text-6xl font-bold mb-10 p-5 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 animate-text-gradient bg-[length:200%_auto]">
-          Create your NFT on Solana
-        </h1>
-        <div className="w-full max-w-md space-y-6 bg-zinc-900/50 p-8 rounded-xl shadow-2xl border border-zinc-800/50 backdrop-blur-sm hover:border-purple-500/20 transition-all duration-300">
-          {/* Image preview */}
-          <div className="flex justify-center mb-4">
-            <div className="w-full aspect-square rounded-lg border-2 border-dashed border-zinc-700 flex items-center justify-center overflow-hidden hover:border-purple-500/50 transition-all duration-300">
-              {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt="NFT Preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="text-center p-6">
-                  <div className="text-purple-400 text-4xl mb-2">🖼️</div>
-                  <p className="text-zinc-400">Enter image URL below</p>
+      </motion.nav>
+
+      <section className="pt-32 pb-20">
+        <div className="container">
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
+            >
+              <CryptoBadge variant="primary">
+                <Palette className="w-4 h-4 inline mr-2" />
+                NFT Creator
+              </CryptoBadge>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="text-5xl md:text-6xl font-bold mb-6 leading-tight"
+            >
+              Create Your
+              <br />
+              <span className="gradient-text">Digital Masterpiece</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto"
+            >
+              Mint unique NFTs on Solana with our powerful creation tools. Turn
+              your digital art into tradeable blockchain assets.
+            </motion.p>
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-20">
+        <div className="container">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="crypto-card p-8"
+            >
+              <div className="flex items-center mb-8">
+                <Sparkles className="w-8 h-8 text-purple-400 mr-3" />
+                <h2 className="text-2xl font-bold">Create NFT</h2>
+              </div>
+
+              <form onSubmit={createNFT} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    NFT Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter NFT name..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={`crypto-input ${
+                      validationErrors.name ? "border-red-500" : ""
+                    }`}
+                    required
+                  />
+                  {validationErrors.name && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {validationErrors.name}
+                    </p>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Image URL input */}
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              Image URL
-            </label>
-            <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              type="text"
-              placeholder="https://example.com/your-image.jpg"
-              onChange={(e) => setImageUrl(e.target.value)}
-              value={imageUrl}
-              disabled={isCreating}
-            />
-          </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Symbol *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., ART"
+                    value={symbol}
+                    onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                    className={`crypto-input ${
+                      validationErrors.symbol ? "border-red-500" : ""
+                    }`}
+                    required
+                  />
+                  {validationErrors.symbol && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {validationErrors.symbol}
+                    </p>
+                  )}
+                </div>
 
-          {/* NFT Name input */}
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              NFT Name
-            </label>
-            <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              type="text"
-              placeholder="Enter NFT name"
-              onChange={(e) => setName(e.target.value)}
-              value={name}
-              disabled={isCreating}
-            />
-          </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Description *
+                  </label>
+                  <textarea
+                    placeholder="Describe your NFT..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    className={`crypto-input ${
+                      validationErrors.description ? "border-red-500" : ""
+                    }`}
+                    required
+                  />
+                  {validationErrors.description && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {validationErrors.description}
+                    </p>
+                  )}
+                </div>
 
-          {/* Symbol input */}
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              Symbol
-            </label>
-            <input
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              type="text"
-              placeholder="Enter NFT symbol"
-              onChange={(e) => setSymbol(e.target.value)}
-              value={symbol}
-              disabled={isCreating}
-            />
-          </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Image URL *
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/image.png"
+                    value={imageUrl}
+                    onChange={(e) => handleImageUrlChange(e.target.value)}
+                    className={`crypto-input ${
+                      validationErrors.imageUrl ? "border-red-500" : ""
+                    }`}
+                    required
+                  />
+                  {validationErrors.imageUrl && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {validationErrors.imageUrl}
+                    </p>
+                  )}
+                </div>
 
-          {/* Description input */}
-          <div className="space-y-2 group">
-            <label className="text-sm text-zinc-400 ml-1 group-hover:text-purple-400 transition-colors duration-200">
-              Description
-            </label>
-            <textarea
-              className="w-full px-4 py-3 rounded-lg bg-zinc-800/50 text-white border border-zinc-700/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 hover:border-purple-500/30"
-              placeholder="Describe your NFT"
-              rows={4}
-              onChange={(e) => setDescription(e.target.value)}
-              value={description}
-              disabled={isCreating}
-            />
-          </div>
-
-          {/* Creation status */}
-          {isCreating && (
-            <div className="bg-zinc-800/70 rounded-lg p-4 text-sm text-purple-300 animate-pulse">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 rounded-full border-2 border-purple-400 border-t-transparent animate-spin"></div>
-                <span>{creatingStatus || "Creating your NFT..."}</span>
-              </div>
-            </div>
-          )}
-
-          {/* NFT mint address (success state) */}
-          {nftMintAddress && (
-            <div className="bg-zinc-800/70 rounded-lg p-4 text-sm text-green-300 break-all">
-              <p className="mb-2 font-semibold">NFT Created Successfully! 🎉</p>
-              <div className="flex items-center space-x-2">
-                <span className="text-zinc-400">Mint Address:</span>
-                <span className="font-mono">{nftMintAddress}</span>
-                <button
-                  onClick={copyNftAddress}
-                  className="text-purple-400 hover:text-purple-300"
-                  title="Copy address"
+                <CryptoButton
+                  type="submit"
+                  disabled={isCreating || !wallet.connected}
+                  className="w-full text-lg py-4"
                 >
-                  📋
-                </button>
+                  {isCreating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Creating NFT...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5 mr-2" />
+                      Create NFT
+                    </>
+                  )}
+                </CryptoButton>
+              </form>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="crypto-card p-8">
+                <div className="flex items-center mb-6">
+                  <Eye className="w-8 h-8 text-green-400 mr-3" />
+                  <h3 className="text-2xl font-bold">Preview</h3>
+                </div>
+
+                <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
+                  {imagePreview ? (
+                    <div className="space-y-4">
+                      <img
+                        src={imagePreview}
+                        alt="NFT Preview"
+                        className="w-full h-64 object-cover rounded-lg"
+                        onError={() => setImagePreview("")}
+                      />
+                      <div>
+                        <h4 className="font-bold text-lg">
+                          {name || "Untitled NFT"}
+                        </h4>
+                        <p className="text-gray-400 text-sm">
+                          {symbol || "SYMBOL"}
+                        </p>
+                        <p className="text-gray-300 mt-2">
+                          {description || "No description provided"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-16">
+                      <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400">
+                        Enter image URL to see preview
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <p className="mt-2 text-xs text-zinc-400">
-                Check your wallet to view the NFT
-              </p>
-            </div>
-          )}
 
-          {/* Create button */}
-          <button
-            className="w-full px-6 py-3 text-white bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-[length:200%] animate-button-gradient font-semibold rounded-lg transition-all duration-300 hover:opacity-90 hover:scale-[0.99] transform active:scale-[0.98] mt-4 hover:shadow-lg hover:shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            onClick={createNFT}
-            disabled={isCreating}
-          >
-            {isCreating ? "Creating NFT..." : "Create NFT"}
-          </button>
+              <div className="crypto-card p-8">
+                <div className="flex items-center mb-6">
+                  <Star className="w-8 h-8 text-yellow-400 mr-3" />
+                  <h3 className="text-2xl font-bold">NFT Details</h3>
+                </div>
 
-          <p className="text-zinc-500 text-center text-sm mt-4 hover:text-purple-400 transition-colors duration-200">
-            Connect Phantom or Backpack wallet to mint your NFT
-          </p>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Blockchain:</span>
+                    <CryptoBadge variant="success">Solana</CryptoBadge>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Standard:</span>
+                    <span className="font-medium">SPL Token</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Supply:</span>
+                    <span className="font-medium text-blue-400">
+                      1 (Unique)
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Royalties:</span>
+                    <span className="font-medium text-purple-400">5%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="crypto-card p-8">
+                <div className="flex items-center mb-6">
+                  <CheckCircle className="w-8 h-8 text-green-400 mr-3" />
+                  <h3 className="text-2xl font-bold">Features</h3>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Immutable ownership</span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Creator royalties</span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Marketplace compatible</span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Metadata verification</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="crypto-card p-8 border-blue-500/30">
+                <div className="flex items-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-blue-400 mr-3" />
+                  <h3 className="text-lg font-bold text-blue-400">Tips</h3>
+                </div>
+                <div className="space-y-2 text-sm text-gray-300">
+                  <p>• Use high-quality images (PNG, JPG, or GIF)</p>
+                  <p>• Keep names and descriptions clear and engaging</p>
+                  <p>• Ensure image URLs are permanent and accessible</p>
+                  <p>• Consider copyright and intellectual property rights</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
-      </div>
-      <style jsx global>{`
-        @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-        .animate-gradient {
-          animation: gradient 15s ease infinite;
-          background-size: 200% 200%;
-        }
-        .animate-text-gradient {
-          animation: textGradient 5s linear infinite;
-        }
-        @keyframes textGradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 200% 50%;
-          }
-        }
-        .animate-button-gradient {
-          animation: buttonGradient 3s linear infinite;
-        }
-        @keyframes buttonGradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 200% 50%;
-          }
-        }
-      `}</style>
-    </>
+      </section>
+    </div>
   );
 }

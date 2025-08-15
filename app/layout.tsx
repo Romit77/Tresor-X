@@ -15,8 +15,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "TresorX",
-  description: "Solana Dapp",
+  title: "TresorX - Professional Solana Tools",
+  description:
+    "Go from 0 to $1 with professional Solana development tools. Create tokens, manage wallets, and build the future of Web3.",
 };
 
 export default function RootLayout({
