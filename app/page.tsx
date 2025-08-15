@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import TresorXLogo from "./components/TresorXLogo";
 import {
   Terminal,
   Zap,
@@ -179,7 +180,7 @@ const FeatureCard = ({
           {badge && <CryptoBadge variant="success">{badge}</CryptoBadge>}
         </div>
 
-        <h3 className="text-xl font-bold mb-3 group-hover:text-purple-300 transition-colors">
+        <h3 className="text-xl font-space-grotesk font-bold mb-3 group-hover:text-purple-300 transition-colors tracking-tight">
           {title}
         </h3>
 
@@ -210,31 +211,30 @@ export default function HomePage() {
               className="flex items-center space-x-3"
               whileHover={{ scale: 1.05 }}
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
-                <Terminal className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-2xl font-bold">
-                Tresor<span className="gradient-text">X</span>
+              <TresorXLogo size="md" animated={true} />
+              <div className="text-2xl font-bold font-space-grotesk tracking-tight">
+                <span className="text-white">Tresor</span>
+                <span className="gradient-text">X</span>
               </div>
             </motion.div>
 
             <div className="flex items-center space-x-6">
-              <nav className="hidden md:flex items-center space-x-6">
+              <nav className="hidden md:flex items-center space-x-6 font-space-grotesk">
                 <Link
                   href="#features"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors font-medium"
                 >
                   Features
                 </Link>
                 <Link
                   href="#tools"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors font-medium"
                 >
                   Tools
                 </Link>
                 <Link
                   href="#about"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors font-medium"
                 >
                   About
                 </Link>
@@ -256,7 +256,7 @@ export default function HomePage() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-40 left-10 hidden lg:block"
         >
-          <div className="crypto-card p-4 text-sm font-mono max-w-xs">
+          <div className="crypto-card p-4 text-sm font-jetbrains-mono max-w-xs">
             <div className="text-green-400 mb-1">$ tresorx --version</div>
             <div className="text-gray-400">TresorX CLI v2.1.0</div>
             <div className="text-purple-400">Solana Devnet Ready ⚡</div>
@@ -268,7 +268,7 @@ export default function HomePage() {
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-60 right-10 hidden lg:block"
         >
-          <div className="crypto-card p-4 text-sm font-mono max-w-xs">
+          <div className="crypto-card p-4 text-sm font-jetbrains-mono max-w-xs">
             <div className="text-yellow-400 mb-1">🚀 Token Created</div>
             <div className="text-gray-400">Supply: 1,000,000</div>
             <div className="text-blue-400">Network: Solana</div>
@@ -301,7 +301,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.8, delay: 0.1 }}
-                  className="text-5xl md:text-7xl font-bold mb-8 leading-tight"
+                  className="text-5xl md:text-7xl font-space-grotesk font-bold mb-8 leading-tight tracking-tight"
                 >
                   Build the{" "}
                   <span className="relative">
@@ -321,7 +321,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed"
+                  className="text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed font-light"
                 >
                   The ultimate toolkit for Solana developers and DeFi
                   enthusiasts. Create, deploy, and manage your crypto projects
@@ -385,13 +385,13 @@ export default function HomePage() {
                           <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                           <div className="w-3 h-3 rounded-full bg-green-500"></div>
                         </div>
-                        <div className="text-sm text-gray-400 font-mono">
+                        <div className="text-sm text-gray-400 font-jetbrains-mono">
                           tresorx-terminal
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-6 bg-black font-mono text-sm space-y-3">
+                    <div className="p-6 bg-black font-jetbrains-mono text-sm space-y-3">
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -505,7 +505,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-4xl md:text-5xl font-bold mb-6"
+              className="text-4xl md:text-5xl font-space-grotesk font-bold mb-6 tracking-tight"
             >
               Why Choose <span className="gradient-text">TresorX</span>?
             </motion.h2>
@@ -698,7 +698,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-4xl md:text-5xl font-bold mb-6"
+              className="text-4xl md:text-5xl font-space-grotesk font-bold mb-6 tracking-tight"
             >
               Powerful <span className="gradient-text">DeFi Tools</span>
             </motion.h2>
@@ -903,7 +903,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="crypto-card p-12 text-center bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-500/30"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-4xl md:text-5xl font-space-grotesk font-bold mb-6 tracking-tight">
               Ready to <span className="gradient-text">Get Started</span>?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">

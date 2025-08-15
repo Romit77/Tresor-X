@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,8 +28,20 @@ body {
   overflow-x: hidden;
   background: var(--crypto-bg);
   color: var(--crypto-text);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-space-grotesk), "Space Grotesk", "Inter", system-ui,
+    -apple-system, sans-serif;
   scroll-behavior: smooth;
+  font-feature-settings: "liga" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-mono,
+.font-jetbrains-mono {
+  font-family: var(--font-jetbrains-mono), "JetBrains Mono", "Fira Code",
+    "SF Mono", "Monaco", "Cascadia Code", monospace;
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
 }
 
 .container {
@@ -47,6 +61,47 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-text {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.heading-text {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.mono-text {
+  font-family: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
+}
+
+/* Enhanced button styling */
+.crypto-btn {
+  background: linear-gradient(135deg, var(--crypto-purple), var(--crypto-blue));
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .grid-background {
@@ -90,23 +145,6 @@ body {
   border-color: rgba(139, 92, 246, 0.4);
   transform: translateY(-2px);
   box-shadow: 0 20px 40px rgba(139, 92, 246, 0.1);
-}
-
-.crypto-btn {
-  background: linear-gradient(135deg, var(--crypto-purple), var(--crypto-blue));
-  color: white;
-  padding: 0.75rem 2rem;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
 }
 
 .crypto-btn:hover {
