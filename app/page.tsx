@@ -849,7 +849,7 @@ export default function HomePage() {
                 </div>
 
                 <h3 className="text-xl font-bold mb-3 group-hover:text-pink-300 transition-colors">
-                  NFT Creator
+                  NFT Creator (coming soon)
                 </h3>
 
                 <p className="text-gray-400 mb-4 leading-relaxed">
