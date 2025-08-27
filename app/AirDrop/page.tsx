@@ -31,7 +31,6 @@ const WalletMultiButton = dynamic(
   { ssr: false }
 );
 
-// Modern Crypto Badge Component
 const CryptoBadge = ({
   children,
   variant = "primary",
@@ -55,7 +54,6 @@ const CryptoBadge = ({
   );
 };
 
-// Modern Crypto Button Component
 const CryptoButton = ({
   children,
   variant = "primary",
@@ -115,7 +113,6 @@ export default function AirDropPage() {
 
       toast.success(`Successfully received ${amount} SOL!`);
 
-      // Refresh balance
       const newBalance = await connection.getBalance(wallet.publicKey);
       setBalance(newBalance / LAMPORTS_PER_SOL);
     } catch (error: any) {
@@ -146,7 +143,6 @@ export default function AirDropPage() {
     <div className="min-h-screen bg-black text-white">
       <Toaster position="top-right" />
 
-      {/* Navigation */}
       <motion.nav
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -177,7 +173,6 @@ export default function AirDropPage() {
         </div>
       </motion.nav>
 
-      {/* Hero Section */}
       <section className="pt-32 pb-20">
         <div className="container">
           <div className="max-w-4xl mx-auto text-center">
@@ -217,7 +212,6 @@ export default function AirDropPage() {
         </div>
       </section>
 
-      {/* Main Content */}
       <section className="pb-20">
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
@@ -291,7 +285,6 @@ export default function AirDropPage() {
               </div>
             </motion.div>
 
-            {/* Info Panel */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -344,7 +337,6 @@ export default function AirDropPage() {
                 </div>
               </div>
 
-              {/* Features */}
               <div className="crypto-card p-8">
                 <div className="flex items-center mb-6">
                   <CheckCircle className="w-8 h-8 text-green-400 mr-3" />
@@ -374,7 +366,6 @@ export default function AirDropPage() {
                 </div>
               </div>
 
-              {/* Warning */}
               <div className="crypto-card p-8 border-orange-500/30">
                 <div className="flex items-center mb-4">
                   <AlertCircle className="w-6 h-6 text-orange-400 mr-3" />
