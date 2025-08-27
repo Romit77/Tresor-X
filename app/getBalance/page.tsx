@@ -94,6 +94,7 @@ export default function GetBalancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showFullAddress, setShowFullAddress] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [solPrice, setSolPrice] = useState<number | null>(null);
   const wallet = useWallet();
   const { connection } = useConnection();
 
@@ -117,6 +118,19 @@ export default function GetBalancePage() {
     }
   };
 
+  const fetchSolPrice = async () => {
+    try {
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
+      );
+      const data = await response.json();
+      setSolPrice(data.solana.usd);
+    } catch (error) {
+      console.error("Error fetching SOL price:", error);
+      setSolPrice(150);
+    }
+  };
+
   const copyAddress = () => {
     if (wallet.publicKey) {
       navigator.clipboard.writeText(wallet.publicKey.toString());
@@ -128,6 +142,7 @@ export default function GetBalancePage() {
     if (wallet.publicKey && wallet.connected) {
       getBalance();
     }
+    fetchSolPrice();
   }, [wallet.publicKey, wallet.connected]);
 
   const formatBalance = (bal: number | null) => {
@@ -144,7 +159,6 @@ export default function GetBalancePage() {
     <div className="min-h-screen bg-black text-white">
       <Toaster position="top-right" />
 
-      {/* Navigation */}
       <motion.nav
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -175,7 +189,6 @@ export default function GetBalancePage() {
         </div>
       </motion.nav>
 
-      {/* Hero Section */}
       <section className="pt-32 pb-20">
         <div className="container">
           <div className="max-w-4xl mx-auto text-center">
@@ -215,11 +228,9 @@ export default function GetBalancePage() {
         </div>
       </section>
 
-      {/* Main Content */}
       <section className="pb-20">
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Balance Display */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -245,7 +256,6 @@ export default function GetBalancePage() {
                 </CryptoButton>
               </div>
 
-              {/* Balance Card */}
               <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 rounded-2xl p-8 border border-purple-500/30 mb-6">
                 <div className="text-center">
                   <div className="text-sm text-gray-400 mb-2">
@@ -258,15 +268,14 @@ export default function GetBalancePage() {
                     <span className="text-2xl text-gray-300 ml-2">SOL</span>
                   </div>
 
-                  {balance !== null && (
+                  {balance !== null && solPrice !== null && (
                     <div className="text-sm text-gray-400">
-                      ≈ ${(balance * 150).toFixed(2)} USD {/* Mock price */}
+                      ≈ ${(balance * solPrice).toFixed(2)} USD
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Wallet Info */}
               {wallet.publicKey && (
                 <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
                   <div className="flex items-center justify-between mb-4">
@@ -315,14 +324,12 @@ export default function GetBalancePage() {
               )}
             </motion.div>
 
-            {/* Info Panel */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               className="space-y-6"
             >
-              {/* Balance Analytics */}
               <div className="crypto-card p-8">
                 <div className="flex items-center mb-6">
                   <TrendingUp className="w-8 h-8 text-blue-400 mr-3" />
@@ -332,7 +339,7 @@ export default function GetBalancePage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">Network:</span>
-                    <CryptoBadge variant="success">Solana Mainnet</CryptoBadge>
+                    <CryptoBadge variant="success">Solana Devnet</CryptoBadge>
                   </div>
 
                   <div className="flex justify-between items-center">
@@ -354,7 +361,6 @@ export default function GetBalancePage() {
                 </div>
               </div>
 
-              {/* Features */}
               <div className="crypto-card p-8">
                 <div className="flex items-center mb-6">
                   <CheckCircle className="w-8 h-8 text-green-400 mr-3" />
@@ -384,7 +390,6 @@ export default function GetBalancePage() {
                 </div>
               </div>
 
-              {/* Quick Actions */}
               <div className="crypto-card p-8">
                 <div className="flex items-center mb-6">
                   <Activity className="w-8 h-8 text-purple-400 mr-3" />
@@ -406,7 +411,6 @@ export default function GetBalancePage() {
                 </div>
               </div>
 
-              {/* Important Notice */}
               <div className="crypto-card p-8 border-blue-500/30">
                 <div className="flex items-center mb-4">
                   <AlertCircle className="w-6 h-6 text-blue-400 mr-3" />
